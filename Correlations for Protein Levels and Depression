@@ -19,7 +19,7 @@ merged_data_without_NA_1 <- merged_data_1[complete.cases(merged_data_1), ]
 
 correlation_results_1 <- merged_data_without_NA_1 %>%
   group_by(TESTNAME) %>%
-  do(tidy(cor.test(.$total_score, .$TESTVALUE, method = "spearman"))) %>%
+  do(tidy(cor.test(.$total_score, .$TESTVALUE, method = "pearson"))) %>%
   filter(!is.na(estimate)) %>%
   select(TESTNAME, estimate, p.value) %>%
   arrange(TESTNAME)
