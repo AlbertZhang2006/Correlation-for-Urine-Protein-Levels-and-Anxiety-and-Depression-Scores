@@ -1,0 +1,33 @@
+GDS <- read_csv("Geriatric_Depression_Scale__Short_Version__10Dec2023.csv")
+GDS_data <- as.data.frame(GDS)
+
+# Select columns containing GDS scores
+GDS_scores <- GDS_data[, 6:20]  # Assuming GDS items are from column 6 to column 20
+
+# Calculate total score for each patient
+GDS_data$total_score <- rowSums(GDS_scores, na.rm = TRUE)
+
+
+# Create a new data frame with PATNO and total_score columns
+GDS_summary <- data.frame(PATNO = GDS_data$PATNO, total_score = GDS_data$total_score)
+
+# Perform the merge based on PATNO
+merged_data_1 <- merge(GDS_summary, pd_data , by = "PATNO", all.x = TRUE)
+
+# Remove rows with NA values in any column
+merged_data_without_NA_1 <- merged_data_1[complete.cases(merged_data_1), ]
+
+correlation_results_1 <- merged_data_without_NA_1 %>%
+  group_by(TESTNAME) %>%
+  do(tidy(cor.test(.$total_score, .$TESTVALUE, method = "spearman"))) %>%
+  filter(!is.na(estimate)) %>%
+  select(TESTNAME, estimate, p.value) %>%
+  arrange(TESTNAME)
+
+# Subset correlation_results for p-value < 0.05
+significant_results_1 <- subset(correlation_results_1, p.value < 0.05)
+
+# Subset significant_results for estimates > 0.3
+significant_association_results_1 <- correlation_results_1[correlation_results_1$estimate > 0.6 | correlation_results_1$estimate < -0.6, ]
+
+correlation_results
