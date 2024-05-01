@@ -1,3 +1,9 @@
+library(readr)
+library(ggplot2)
+library(tidyverse)
+library(plyr); library(dplyr)
+library(broom)
+
 GDS <- read_csv("Geriatric_Depression_Scale__Short_Version__10Dec2023.csv")
 GDS_data <- as.data.frame(GDS)
 
