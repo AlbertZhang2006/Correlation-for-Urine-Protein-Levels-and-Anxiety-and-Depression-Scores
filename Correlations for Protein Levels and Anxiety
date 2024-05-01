@@ -1,0 +1,71 @@
+library(readr)
+library(ggplot2)
+library(tidyverse)
+library(plyr); library(dplyr)
+library(broom)
+
+# Load PPMI urinary proteomic datasets (PPMI divided the proteomic data into 5 datasets)
+proteomics_1 <- read_csv("Targeted___untargeted_MS-based_proteomics_of_urine_in_PD_1_of_5_20Aug2023.csv")
+pro_1 <-as.data.frame(proteomics_1)
+
+proteomics_2 <- read_csv("Targeted___untargeted_MS-based_proteomics_of_urine_in_PD_2_of_5_10Dec2023.csv")
+pro_2 <-as.data.frame(proteomics_2)
+
+proteomics_3 <- read_csv("Targeted___untargeted_MS-based_proteomics_of_urine_in_PD_3_of_5_10Dec2023.csv")
+pro_3 <-as.data.frame(proteomics_3)
+
+proteomics_4 <- read_csv("Targeted___untargeted_MS-based_proteomics_of_urine_in_PD_4_of_5_10Dec2023.csv")
+pro_4 <-as.data.frame(proteomics_4)
+
+proteomics_5 <- read_csv("Targeted___untargeted_MS-based_proteomics_of_urine_in_PD_5_of_5_26Aug2023.csv")
+pro_5 <-as.data.frame(proteomics_5)
+
+# Combine proteomic datasets into one large dataset
+proteomics <- rbind(pro_1, pro_2, pro_3, pro_4, pro_5)
+
+# Filter the dataset to only include entries performed on 3/1/2021
+filtered_data <- proteomics %>%
+  filter(CLINICAL_EVENT == "BL")
+
+#Subset data
+pd_data <- subset(filtered_data, COHORT == "PD")
+
+# Load dataset
+STAI <- read.csv("State-Trait_Anxiety_Inventory_10Dec2023.csv")
+STAI_data <- as.data.frame(STAI)
+
+
+# Filter the dataset to only include baseline entries
+filtered_STAI_data <- STAI_data %>%
+  filter(EVENT_ID == "BL")
+
+# Calculate total STAI score for each patient
+filtered_STAI_data$total_STAI_score <- rowSums(filtered_STAI_data[grep("^STAIAD", names(filtered_STAI_data))], na.rm = TRUE)
+
+# Create a new data frame with PATNO and total_score columns
+STAI_summary <- data.frame(PATNO = filtered_STAI_data$PATNO, total_STAI_score = filtered_STAI_data$total_STAI_score)
+
+# Perform the merge based on PATNO
+merged_data <- merge(STAI_summary, pd_data , by = "PATNO", all.x = TRUE)
+
+# Remove rows with NA values in any column
+merged_data_without_NA <- merged_data[complete.cases(merged_data), ]
+
+correlation_results <- merged_data_without_NA %>%
+  group_by(TESTNAME) %>%
+  # Filter out protein types with less than 30 observations
+  filter(sum(!is.na(TESTVALUE)) >= 30) %>%
+  # Run correlation analysis and tidy the results
+  do(tidy(cor.test(.$TESTVALUE, .$total_STAI_score, method = "pearson"))) %>%
+  filter(!is.na(estimate)) %>%
+  select(TESTNAME, estimate, p.value) %>%
+  arrange(TESTNAME)
+
+# Subset correlation_results for p-value < 0.05
+significant_results <- subset(correlation_results, p.value < 0.05)
+
+# Subset significant_results for estimates > 0.6 or < -0.6
+significant_association_results <- correlation_results[correlation_results$estimate > 0.6 | correlation_results_1$estimate < -0.6, ]
+
+# Print correlation results
+print(correlation_results)
