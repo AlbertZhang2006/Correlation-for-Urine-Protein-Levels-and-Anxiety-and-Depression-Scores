@@ -1,0 +1,17 @@
+# Transform p-values to -log10 scale
+correlation_results$log_pvalue <- -log10(correlation_results$p.value)
+
+# Scatter plot of estimates vs. -log10(p-values) for each protein
+ggplot(correlation_results, aes(x = estimate, y = log_pvalue)) +
+  geom_point() +
+  labs(x = "Correlation Coefficient", y = "-log10(P-value)") +
+  ggtitle("Correlation Significance of Proteins for Anxiety")
+
+# Transform p-values to -log10 scale
+correlation_results_1$log_pvalue <- -log10(correlation_results_1$p.value)
+
+# Scatter plot of estimates vs. -log10(p-values) for each protein
+ggplot(correlation_results_1, aes(x = estimate, y = log_pvalue)) +
+  geom_point() +
+  labs(x = "Correlation Coefficient", y = "-log10(P-value)") +
+  ggtitle("Correlation Significance of Proteins for Depression")
